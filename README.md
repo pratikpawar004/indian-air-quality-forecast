@@ -14,7 +14,7 @@ It provides real-time predictions, health impact analysis, and a beautifully vis
 
 ## 🚀 Live Demo
 
-🔗 **[Try it on Streamlit Cloud](https://aqi-predictor-india.streamlit.app/)** (replace with your actual deployment link)
+🔗 **[Try it on Streamlit Cloud](https://aqi-predictor-india.streamlit.app/)** 
 
 ---
 
