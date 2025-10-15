@@ -17,13 +17,18 @@ It provides real-time predictions, health impact analysis, and a beautifully vis
 🔗 **[Try it on Streamlit Cloud](https://aqi-predictor-india.streamlit.app/)** 
 
 ---
+# 🧩 Model Details
 
-## 🧠 Model Info
+- Algorithm: Random Forest Regressor
 
-The backend model is a **Random Forest Regressor**, trained on Indian air quality data.  
-It is hosted on **Hugging Face Hub** for efficient loading.
+- Trained On: Indian Air Quality Dataset
 
-🧩 Model Repository: [pratikpawar004/indian-air-quality-model](https://huggingface.co/pratikpawar004/indian-air-quality-model)
+- Model File: best_random_forest_model.joblib
+
+- Hosted On: [Hugging Face Hub](https://huggingface.co/pratikpawar004/indian-air-quality-model)
+
+
+- The model is automatically downloaded from Hugging Face when not found locally.
 
 ---
 
@@ -86,20 +91,6 @@ pip install -r requirements.txt
 streamlit run streamlit_app.py
 
 ```
----
-# 🧩 Model Details
 
-- Algorithm: Random Forest Regressor
-
-- Trained On: Indian Air Quality Dataset
-
-- Model File: best_random_forest_model.joblib
-
-- Hosted On: [Hugging Face Hub](https://huggingface.co/pratikpawar004/indian-air-quality-model)
-
-
-- The model is automatically downloaded from Hugging Face when not found locally.
-
----
 # 👨‍💻 Author
 ## Pratik Pawar  
