@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import pandas as pd
 import joblib
@@ -5,6 +6,7 @@ from datetime import datetime
 from streamlit_extras.colored_header import colored_header
 from streamlit_extras.metric_cards import style_metric_cards
 from huggingface_hub import hf_hub_download
+
 
 # PAGE CONFIGURATION
 st.set_page_config(page_title="🌫️ AQI Predictor (India Standard)", page_icon="🌫️", layout="centered")
@@ -57,34 +59,36 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# LOAD MODEL
+# ✅ LOAD MODEL (optimized for Streamlit)
+@st.cache_resource
+def load_model():
+    local_path = "best_random_forest_model.joblib"
+
+    # If model already exists locally → load silently
+    if os.path.exists(local_path):
+        model = joblib.load(local_path)
+        return model
+
+    # If not found, download once from Hugging Face
+    with st.spinner("📦 Downloading model from Hugging Face Hub..."):
+        model_path = hf_hub_download(
+            repo_id="pratikpawar004/indian-air-quality-model",
+            filename="best_random_forest_model.joblib"
+        )
+        model = joblib.load(model_path)
+        # Save a local copy so it won’t redownload next time
+        joblib.dump(model, local_path)
+    return model
+
+
+# ---- LOAD THE MODEL ----
 try:
-    # Try loading from Hugging Face Hub
-    st.info("📦 Downloading model from Hugging Face...")
-    model_path = hf_hub_download(
-        repo_id="pratikpawar004/indian-air-quality-model",
-        filename="best_random_forest_model.joblib"
-    )
-    model = joblib.load(model_path)
+    model = load_model()
     model_features = model.feature_names_in_
-    st.success("✅ Model loaded successfully from Hugging Face Hub!")
-
 except Exception as e:
-    st.warning(f"⚠️ Could not load model from Hugging Face ({e}). Trying local copy...")
+    st.error(f"❌ Failed to load model: {e}")
+    st.stop()
 
-    try:
-        # Fallback: load local model file
-        model = joblib.load("best_random_forest_model.joblib")
-        model_features = model.feature_names_in_
-        st.success("✅ Loaded local model successfully.")
-    except FileNotFoundError:
-        st.error("❌ Model file not found locally or online. Please check your setup.")
-        st.stop()
-    except Exception as e:
-        st.error(f"⚠️ Error loading model: {e}")
-        st.stop()
-
-        
 st.markdown("<h1>🌫️ Air Quality Index Predictor (India)</h1>", unsafe_allow_html=True)
 st.write("Predict the Air Quality Index (AQI) using major pollutant concentrations as per Indian CPCB standards.")
 
