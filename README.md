@@ -6,7 +6,8 @@
 
 ## 📘 Overview
 
-**Air Quality Index Predictor** is a machine learning web app built with **Streamlit** that predicts the **Air Quality Index (AQI)** based on pollutant concentrations like PM2.5, PM10, NO₂, SO₂, CO, and O₃ — following **CPCB (India)** standards.  
+**Air Quality Index Predictor** is a machine learning web app built with **Streamlit** that predicts the **Air Quality Index (AQI)** based on pollutant concentrations like PM2.5, PM10, NO₂, SO₂, CO, and O₃ — following **Central Pollution Control Board: CPCB
+ (India)** standards.  
 It provides real-time predictions, health impact analysis, and a beautifully visualized AQI scale.
 
 ---
