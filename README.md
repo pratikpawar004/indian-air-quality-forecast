@@ -16,6 +16,9 @@ It provides real-time predictions, health impact analysis, and a beautifully vis
 
 🔗 **[Try it on Streamlit Cloud](https://aqi-predictor-india.streamlit.app/)** 
 
+Adjust the input parameters — **PM2.5 (µg/m³), PM10 (µg/m³), NO₂ (ppb), SO₂ (ppb), CO (ppb), and O₃ (ppb)** — based on reference values from [AQI India Dashboard (Pune)](https://www.aqi.in/in/dashboard/india/maharashtra/pune) to predict the Air Quality Index using a trained Random Forest model.
+
+
 ---
 # 🧩 Model Details
 
@@ -31,7 +34,6 @@ It provides real-time predictions, health impact analysis, and a beautifully vis
 - The model is automatically downloaded from Hugging Face when not found locally.
 
 ---
-
 ## ⚙️ Features
 
 ✅ Predicts AQI based on pollutant concentration levels  
@@ -89,6 +91,7 @@ pip install -r requirements.txt
 ### 4️⃣ Run the Streamlit App
 ```
 streamlit run streamlit_app.py
+
 ```
 
 # 👨‍💻 Author
