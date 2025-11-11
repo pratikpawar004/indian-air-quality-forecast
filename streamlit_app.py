@@ -7,11 +7,13 @@ from streamlit_extras.colored_header import colored_header
 from streamlit_extras.metric_cards import style_metric_cards
 from huggingface_hub import hf_hub_download
 
-
 # PAGE CONFIGURATION
+
 st.set_page_config(page_title="🌫️ AQI Predictor (India Standard)", page_icon="🌫️", layout="centered")
 
-# Global Custom Style
+
+# CUSTOM PAGE STYLE
+
 st.markdown("""
     <style>
         .main {
@@ -59,39 +61,38 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# ✅ LOAD MODEL (optimized for Streamlit)
+# LOAD MODEL & SCALER
 @st.cache_resource
 def load_model():
-    local_path = "best_random_forest_model.joblib"
+    local_path = r"D:\data\Projects\AQI\best_model_random_forest.joblib"
 
-    # If model already exists locally → load silently
     if os.path.exists(local_path):
-        model = joblib.load(local_path)
-        return model
+        data = joblib.load(local_path)
+        return data
 
-    # If not found, download once from Hugging Face
     with st.spinner("📦 Downloading model from Hugging Face Hub..."):
         model_path = hf_hub_download(
             repo_id="pratikpawar004/indian-air-quality-model",
-            filename="best_random_forest_model.joblib"
+            filename="best_model_random_forest.joblib"
         )
-        model = joblib.load(model_path)
-        # Save a local copy so it won’t redownload next time
-        joblib.dump(model, local_path)
-    return model
+        data = joblib.load(model_path)
+        joblib.dump(data, local_path)  # Save locally for future use
+        return data
 
-
-# ---- LOAD THE MODEL ----
 try:
-    model = load_model()
-    model_features = model.feature_names_in_
+    model_data = load_model()
+    model = model_data["model"]
+    scaler = model_data["scaler"]
+    model_features = model_data["features"]
 except Exception as e:
     st.error(f"❌ Failed to load model: {e}")
     st.stop()
 
-st.markdown("<h1>🌫️ Air Quality Index Predictor (India)</h1>", unsafe_allow_html=True)
-st.write("Predict the Air Quality Index (AQI) using major pollutant concentrations as per Indian CPCB standards.")
 
+# PAGE HEADER
+
+st.markdown("<h1>🌫️ Air Quality Index Predictor (India)</h1>", unsafe_allow_html=True)
+st.write("Predict the Air Quality Index (AQI) using pollutant concentrations based on CPCB standards.")
 
 # INPUT SECTION
 
@@ -107,15 +108,16 @@ cities = [
 city = st.selectbox("🏙️ Select City", cities, index=22)
 
 col1, col2 = st.columns(2)
+
 with col1:
     pm25 = st.number_input("🌁 PM2.5 (µg/m³)", 0.0, 500.0, 49.0, help="Fine particulate matter <2.5μm")
-    co = st.number_input("🚗 CO (ppb)", 0.0, 5000.0, 413.0, help="Carbon Monoxide concentration")
-    no2 = st.number_input("🌆 NO2 (ppb)", 0.0, 500.0, 15.0, help="Nitrogen Dioxide concentration")
+    co = st.number_input("🚗 CO (mg/m³)", 0.0, 50.0, 1.0, help="Carbon Monoxide")
+    no2 = st.number_input("🌆 NO₂ (µg/m³)", 0.0, 500.0, 40.0, help="Nitrogen Dioxide")
+
 with col2:
     pm10 = st.number_input("🌫️ PM10 (µg/m³)", 0.0, 500.0, 96.0, help="Coarse particulate matter <10μm")
-    so2 = st.number_input("🔥 SO2 (ppb)", 0.0, 500.0, 1.0, help="Sulphur Dioxide concentration")
-    o3 = st.number_input("☀️ O3 (ppb)", 0.0, 500.0, 21.0, help="Ozone concentration")
-
+    so2 = st.number_input("🔥 SO₂ (µg/m³)", 0.0, 500.0, 20.0, help="Sulphur Dioxiden")
+    o3 = st.number_input("☀️ O₃ (µg/m³)", 0.0, 500.0, 50.0, help="Ozone")
 
 # PREDICTION
 
@@ -128,6 +130,7 @@ if st.button("🔮 Predict AQI"):
         if feature_name:
             input_dict[feature_name] = value
 
+    # Add temporal & city features
     now = datetime.now()
     for f in ["Year", "Month", "IsWeekend"]:
         feature_name = next((feat for feat in model_features if f.lower() in feat.lower()), None)
@@ -144,27 +147,29 @@ if st.button("🔮 Predict AQI"):
         if city_col in input_dict:
             input_dict[city_col] = 1
 
-    input_data = pd.DataFrame([input_dict])[model_features]
-    predicted_aqi = float(model.predict(input_data)[0])
+    input_df = pd.DataFrame([input_dict])[model_features]
+    input_scaled = scaler.transform(input_df)
+    predicted_aqi = float(model.predict(input_scaled)[0])
 
-
-    # FIXED CPCB AQI SCALE
-        
+   
+    # CPCB AQI SCALE
+ 
     if predicted_aqi <= 50:
-        category, color, emoji = "Good", "#4CAF50", "🌄💨"        # Clear sky, fresh breeze
+        category, color, emoji = "Good", "#4CAF50", "🌄💨"
     elif predicted_aqi <= 100:
-        category, color, emoji = "Satisfactory", "#8BC34A", "🌤️🍃"  # Mild haze, still fresh
+        category, color, emoji = "Satisfactory", "#8BC34A", "🌤️🍃"
     elif predicted_aqi <= 200:
-        category, color, emoji = "Moderate", "#FFEB3B", "🌥️"     # Slight haze, neutral tone
+        category, color, emoji = "Moderate", "#FFEB3B", "🌥️"
     elif predicted_aqi <= 300:
-        category, color, emoji = "Poor", "#FF9800", "🌫️😷"         # Visible smog
+        category, color, emoji = "Poor", "#FF9800", "🌫️😷"
     elif predicted_aqi <= 400:
-        category, color, emoji = "Very Poor", "#F44336", "🔥🚫"      # Air feels heavy, danger rising
+        category, color, emoji = "Very Poor", "#F44336", "🔥🚫"
     else:
-        category, color, emoji = "Severe", "#9C27B0", "☠️🏴"        # Toxic air, extreme danger
+        category, color, emoji = "Severe", "#9C27B0", "☠️🏴"
 
-
-    # Display Result
+  
+    # DISPLAY RESULT
+   
     st.markdown(f"""
         <div style='text-align:center; margin-top:20px;'>
             <h2 style='color:white;'>Predicted AQI</h2>
@@ -175,21 +180,24 @@ if st.button("🔮 Predict AQI"):
 
     st.markdown("---")
 
-    # Pollutant Display
+    # 🌫️ Pollutant Summary Section
     st.subheader("Pollutant Concentrations")
+
     col1, col2, col3 = st.columns(3)
     col1.metric("PM2.5 (µg/m³)", f"{pm25:.1f}")
     col2.metric("PM10 (µg/m³)", f"{pm10:.1f}")
-    col3.metric("CO (ppb)", f"{co:.1f}")
+    col3.metric("CO (mg/m³)", f"{co:.1f}")
+
     col4, col5, col6 = st.columns(3)
-    col4.metric("SO₂ (ppb)", f"{so2:.1f}")
-    col5.metric("NO₂ (ppb)", f"{no2:.1f}")
-    col6.metric("O₃ (ppb)", f"{o3:.1f}")
+    col4.metric("SO₂ (µg/m³)", f"{so2:.1f}")
+    col5.metric("NO₂ (µg/m³)", f"{no2:.1f}")
+    col6.metric("O₃ (µg/m³)", f"{o3:.1f}")
+
     style_metric_cards(background_color="#2C2C2C", border_color="#3A3A3A", border_left_color=color)
 
     st.markdown("---")
 
-    # CPCB AQI SCALE BAR
+    # AQI Scale Bar
     st.markdown("<h4 style='text-align:center;'>CPCB AQI Scale (India)</h4>", unsafe_allow_html=True)
     scale_labels = ["Good", "Satisfactory", "Moderate", "Poor", "Very Poor", "Severe"]
     scale_ranges = [50, 100, 200, 300, 400, 500]
@@ -207,9 +215,7 @@ if st.button("🔮 Predict AQI"):
     scale_html += "</div>"
     st.markdown(scale_html, unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # CPCB AQI TABLE
+    # AQI Table
     st.markdown("""
     | Category | AQI Range | Health Impact |
     |-----------|------------|---------------|
