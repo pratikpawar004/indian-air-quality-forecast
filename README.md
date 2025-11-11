@@ -62,7 +62,7 @@ Adjust the input parameters — **PM2.5 (µg/m³), PM10 (µg/m³), NO₂ (ppb), 
 📦 Air Quality Index Predictor
 │
 ├── streamlit_app.py # Main Streamlit app
-├── city_day.csv # Dataset file
+├── AQI_Data.csv # Dataset file
 ├── requirements.txt # Python dependencies
 ├── AQI # Jupyter Notebook File
 ├── best_random_forest_model.joblib # Trained ML model (excluded in repo)
